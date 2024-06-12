@@ -1,0 +1,36 @@
+global:
+  namespace: bzi
+  nexus:
+    cred: nexus-cred
+    host: nexus3-ift.sigma-belpsb.by
+    port: 5048
+
+deployment:
+  profile: ift
+  replicas: 1
+  port: 8050
+  command: [ "/bin/sh","-c" ]
+  args: "npm run run:ift"
+  pullPolicy: Always
+  image:
+    tag: latest
+    path: /bzi-img
+  resources:
+    limits:
+      cpu: '2'
+      memory: '4Gi'
+    requests:
+      cpu: '2'
+      memory: '2Gi'
+  volumes:
+    bzi:
+      mountPath: opt/server/archives
+      server: 172.30.56.144
+      path: /share
+  initialDelay: 20
+  period: 5
+  timeout: 3
+
+ingress:
+  host: bzi.apps.k8s-ift.sigma-belpsb.by
+  rootPath: /
