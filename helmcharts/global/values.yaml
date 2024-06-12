@@ -1,0 +1,5 @@
+global:
+  namespace: bzi
+nexus:
+  cred: nexus-cred
+  dockerjson: eyJhdXRocyI6eyJuZXh1czMtaWZ0LnNpZ21hLWJlbHBzYi5ieTo1MDI3Ijp7ImxvZ2luIjoiZGV2b3BzX3NiZXJvcm0iLCJwYXNzd29yZCI6InVqQHFXSzJ1SzU0QERmRFoiLCJhdXRoIjoiWkdWMmIzQnpYM05pWlhKdmNtMDZkV3BBY1ZkTE1uVkxOVFJBUkdaRVdnPT0ifX19
