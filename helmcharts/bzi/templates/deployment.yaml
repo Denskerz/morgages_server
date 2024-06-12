@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Chart.Name}}
+  namespace: {{.Values.global.namespace}}
+  labels:
+    app: {{.Chart.Name}}
+spec:
+  replicas: {{.Values.deployment.replicas}}
+  selector:
+    matchLabels:
+      app: {{.Chart.Name}}
+  template:
+    metadata:
+      labels:
+        app: {{.Chart.Name}}
+    spec:
+      containers:
+        - name: {{.Chart.Name}}
+          image: "{{ .Values.global.nexus.host }}:{{ .Values.global.nexus.port }}{{ .Values.deployment.image.path }}:{{ .Values.deployment.image.tag }}"
+          command: [ "/bin/sh","-c","--","{{ .Values.deployment.args }}" ]
+          imagePullPolicy: {{.Values.deployment.pullPolicy}}
+          volumeMounts:
+            - name: paosftpdir
+              mountPath: {{.Values.deployment.volumes.bzi.mountPath}}
+          envFrom:
+            - configMapRef:
+                name: {{.Chart.Name}}-config
+          resources:
+            limits:
+              cpu: {{.Values.deployment.resources.limits.cpu | quote}}
+              memory: {{.Values.deployment.resources.limits.memory | quote}}
+            requests:
+              cpu: {{.Values.deployment.resources.requests.cpu | quote }}
+              memory: {{.Values.deployment.resources.requests.memory | quote}}
+          ports:
+            - name: main-port
+              containerPort: {{.Values.deployment.port}}
+      imagePullSecrets:
+        - name: {{.Values.global.nexus.cred}}
+      volumes:
+        - name: paosftpdir
+          nfs:
+            server: {{.Values.deployment.volumes.bzi.server}}
+            path: {{.Values.deployment.volumes.bzi.path}}
