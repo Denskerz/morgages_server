@@ -1,49 +1,28 @@
-from typing import Dict
 import pandas as pd
-from fastapi import FastAPI, HTTPException
-from sqlalchemy.orm import Session
+import re
 
-app = FastAPI()
-
-# Создаем соединение с базой данных
-DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Создаем таблицы в базе данных
-Base.metadata.create_all(bind=engine)
-
-# Словарь соответствий таблиц и моделей
-table_model_map = {
-    'table1': Model1,
-    'table2': Model2,
-    'table3': Model3,
-    'table4': Model4,
-    'table5': Model5
+# Пример датафрейма и списка дат
+data = {
+    'file_paths': [
+        '/path/to/file_12_06_2024.txt',
+        '/another/path/to/file_13_06_2024.txt',
+        '/yet/another/path/file_14_07_2023.txt'
+    ]
 }
+dates_list = ['12_06_2024', '13_06_2024']
 
-def get_dataframes() -> Dict[str, pd.DataFrame]:
-    # Ваш код для получения датафреймов
-    pass
+# Создание датафрейма
+df = pd.DataFrame(data)
 
-@app.post("/upload_data/")
-def upload_data():
-    dataframes = get_dataframes()
+# Создание регулярного выражения для поиска дат
+dates_pattern = '|'.join(re.escape(date) for date in dates_list)
+regex = re.compile(dates_pattern)
 
-    with SessionLocal() as session:
-        try:
-            for table_name, df in dataframes.items():
-                model = table_model_map.get(table_name)
-                if model is None:
-                    raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
+# Функция для проверки наличия даты в пути
+def contains_date(path):
+    return bool(regex.search(path))
 
-                # Преобразуем каждую строку датафрейма в объект модели
-                records = [model(**record) for record in df.to_dict(orient='records')]
-                session.bulk_save_objects(records)
+# Отфильтровать датафрейм
+filtered_df = df[df['file_paths'].apply(contains_date)]
 
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            raise HTTPException(status_code=500, detail=str(e))
-
-    return {"status": "Data uploaded successfully"}
+print(filtered_df)
