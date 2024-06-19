@@ -1,28 +1,22 @@
-import pandas as pd
-import re
+@app.post("/start")
+async def start(start_date: datetime, end_date: datetime, session: Session = Depends(get_db_session)):
 
-# Пример датафрейма и списка дат
-data = {
-    'file_paths': [
-        '/path/to/file_12_06_2024.txt',
-        '/another/path/to/file_13_06_2024.txt',
-        '/yet/another/path/file_14_07_2023.txt'
-    ]
-}
-dates_list = ['12_06_2024', '13_06_2024']
+    data: tuple[dict[str, DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
+    disk.reset()
 
-# Создание датафрейма
-df = pd.DataFrame(data)
+    try:
+        for table in data:
+            for table_name, df in table.items():
+                model = table_model_map.get(table_name)
+                if model is None:
+                    raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
 
-# Создание регулярного выражения для поиска дат
-dates_pattern = '|'.join(re.escape(date) for date in dates_list)
-regex = re.compile(dates_pattern)
+                records = [model(**record) for _, record in df.iterrows() if len(df) != 0]
+                session.bulk_save_objects(records)
+                session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Функция для проверки наличия даты в пути
-def contains_date(path):
-    return bool(regex.search(path))
 
-# Отфильтровать датафрейм
-filtered_df = df[df['file_paths'].apply(contains_date)]
-
-print(filtered_df)
+    return {"status": "Data uploaded successfully"}
