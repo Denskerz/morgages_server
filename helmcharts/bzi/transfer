@@ -1,22 +1,34 @@
-@app.post("/start")
-async def start(start_date: datetime, end_date: datetime, session: Session = Depends(get_db_session)):
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+import pandas as pd
 
-    data: tuple[dict[str, DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
+from . import models, database
+from .utils import process_excel_data, disk
+
+app = FastAPI()
+
+async def get_db_session() -> AsyncSession:
+    async with database.async_session() as session:
+        yield session
+
+@app.post("/start")
+async def start(start_date: datetime, end_date: datetime, session: AsyncSession = Depends(get_db_session)):
+    data: tuple[dict[str, pd.DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
     disk.reset()
 
     try:
         for table in data:
             for table_name, df in table.items():
-                model = table_model_map.get(table_name)
+                model = models.table_model_map.get(table_name)
                 if model is None:
                     raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
 
                 records = [model(**record) for _, record in df.iterrows() if len(df) != 0]
-                session.bulk_save_objects(records)
-                session.commit()
+                session.add_all(records)
+                await session.commit()
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
 
     return {"status": "Data uploaded successfully"}
