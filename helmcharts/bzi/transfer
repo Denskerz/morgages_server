@@ -24,9 +24,7 @@ async def start(start_date: datetime, end_date: datetime, session: AsyncSession 
                 if model is None:
                     raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
 
-                records = [model(**record) for _, record in df.iterrows() if len(df) != 0]
-                session.add_all(records)
-                await session.commit()
+                await df.to_sql(table_name, con=session.bind, if_exists='append', index=False)
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
