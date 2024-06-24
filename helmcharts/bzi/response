@@ -1,10 +1,10 @@
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.orm import sessionmaker
 from typing import Any, AsyncIterator
 import contextlib
-import asyncpg
 from datetime import datetime
 
 app = FastAPI()
@@ -59,45 +59,50 @@ async def get_db_session():
     async with sessionmanager.session() as session:
         yield session
 
-async def insert_dataframe_to_db(df: pd.DataFrame, table_name: str, connection):
-    columns = ', '.join([f'"{col}"' for col in df.columns])
-    values = ', '.join([f'${i+1}' for i in range(len(df.columns))])
-    insert_statement = f'INSERT INTO {table_name} ({columns}) VALUES ({values})'
 
-    for row in df.itertuples(index=False, name=None):
-        await connection.execute(insert_statement, *row)
+# Словарь для маппинга моделей к таблицам
+table_model_map = {
+    "ExcelServiceLogs": log_models.ExcelServiceLogsOrm,
+    "Conclusion": stage_models.ConclusionOrm,
+    "PLMothaballedUnfinObj": stage_models.PLMothaballedUnfinObjOrm,
+    "PledgePRRightProceeds": stage_models.PledgePRRightProceedsOrm,
+    "PledgePRRightAcquiredPR": stage_models.PledgePRRightAcquiredPROrm,
+    "PledgePrRightLeasing": stage_models.PledgePrRightLeasingOrm,
+    "PledgeImperfectUnpreservedOBJ": stage_models.PledgeImperfectUnpreservedOBJOrm,
+    "PledgeFAInstalledEQ": stage_models.PledgeFAInstalledEQOrm,
+    "PledgeGoods": stage_models.PledgeGoodsOrm,
+    "PledgedVehicles": stage_models.PledgedVehiclesOrm,
+    "PledgeSecurities": stage_models.PledgeSecuritiesOrm,
+    "Mortgage": stage_models.MortgageOrm,
+    "CommonAttributes": stage_models.CommonAttributesOrm
+}
 
 @app.post("/start")
 async def start(start_date: datetime, end_date: datetime, session: AsyncSession = Depends(get_db_session)):
     data: tuple[dict[str, pd.DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
     disk.reset()
-
+    
     try:
         async with session.begin():
-            async with session.connection() as conn:
-                connection = await asyncpg.connect(dsn="postgresql://user:password@localhost/dbname")
-                try:
-                    for table in data:
-                        for table_name, df in table.items():
-                            model = table_model_map.get(table_name)
-                            if model is None:
-                                raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
-
-                            await insert_dataframe_to_db(df, table_name, connection)
-                finally:
-                    await connection.close()
+            for table in data:
+                for table_name, df in table.items():
+                    model = table_model_map.get(table_name)
+                    if model is None:
+                        raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
+                    
+                    # Преобразование DataFrame в список словарей
+                    records = df.to_dict(orient='records')
+                    
+                    # Вставка данных
+                    await session.execute(model.__table__.insert(), records)
+                    
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    
     return {"status": "Data uploaded successfully"}
 
 # Функция для процесса данных Excel
 def process_excel_data(df: pd.DataFrame) -> tuple[dict[str, pd.DataFrame]]:
     # Ваш код для обработки данных
     pass
-
-# Словарь для маппинга моделей к таблицам
-table_model_map = {
-    # 'table_name': ModelClass,
-    # Добавьте маппинг ваших таблиц и моделей здесь
-}
