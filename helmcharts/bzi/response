@@ -1,7 +1,6 @@
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncConnection
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from typing import Any, AsyncIterator
 import contextlib
@@ -60,22 +59,33 @@ async def get_db_session():
     async with sessionmanager.session() as session:
         yield session
 
+async def insert_dataframe_to_db(df: pd.DataFrame, table_name: str, connection):
+    columns = ', '.join([f'"{col}"' for col in df.columns])
+    values = ', '.join([f'${i+1}' for i in range(len(df.columns))])
+    insert_statement = f'INSERT INTO {table_name} ({columns}) VALUES ({values})'
+
+    for row in df.itertuples(index=False, name=None):
+        await connection.execute(insert_statement, *row)
+
 @app.post("/start")
 async def start(start_date: datetime, end_date: datetime, session: AsyncSession = Depends(get_db_session)):
     data: tuple[dict[str, pd.DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
     disk.reset()
 
     try:
-        for table in data:
-            for table_name, df in table.items():
-                model = table_model_map.get(table_name)
-                if model is None:
-                    raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
+        async with session.begin():
+            async with session.connection() as conn:
+                connection = await asyncpg.connect(dsn="postgresql://user:password@localhost/dbname")
+                try:
+                    for table in data:
+                        for table_name, df in table.items():
+                            model = table_model_map.get(table_name)
+                            if model is None:
+                                raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
 
-                # Определим подключение через asyncpg
-                async with session.connection() as conn:
-                    async with conn.begin():
-                        await conn.run_sync(df.to_sql, table_name, if_exists='append', index=False, method='multi', index_label='id', chunksize=1000)
+                            await insert_dataframe_to_db(df, table_name, connection)
+                finally:
+                    await connection.close()
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
