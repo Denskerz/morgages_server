@@ -1,0 +1,1 @@
+Inspection on an AsyncEngine is currently not supported. Please obtain a connection then use ``conn.run_sync`` to pass a callable where it's possible to call ``inspect`` on the passed connection. (Background on this error at: https://sqlalche.me/e/20/xd3s)
