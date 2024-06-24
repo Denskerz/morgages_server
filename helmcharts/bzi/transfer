@@ -1,4 +1,4 @@
-есть класс для создания сессии в бд 
+есть некоторые конфигурации для создания сессии и соединия с базой данной 
 class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
         self._engine = create_async_engine(host, **engine_kwargs)
@@ -45,13 +45,27 @@ async def get_db_session():
     async with sessionmanager.session() as session:
         yield session
 
+и есть код:
+table_model_map = {
+    "ExcelServiceLogs": log_models.ExcelServiceLogsOrm,
+    "Conclusion": stage_models.ConclusionOrm,
+    "PLMothaballedUnfinObj": stage_models.PLMothaballedUnfinObjOrm,
+    "PledgePRRightProceeds": stage_models.PledgePRRightProceedsOrm,
+    "PledgePRRightAcquiredPR": stage_models.PledgePRRightAcquiredPROrm,
+    "PledgePrRightLeasing": stage_models.PledgePrRightLeasingOrm,
+    "PledgeImperfectUnpreservedOBJ": stage_models.PledgeImperfectUnpreservedOBJOrm,
+    "PledgeFAInstalledEQ": stage_models.PledgeFAInstalledEQOrm,
+    "PledgeGoods": stage_models.PledgeGoodsOrm,
+    "PledgedVehicles": stage_models.PledgedVehiclesOrm,
+    "PledgeSecurities": stage_models.PledgeSecuritiesOrm,
+    "Mortgage": stage_models.MortgageOrm,
+    "CommonAttributes": stage_models.CommonAttributesOrm
+}
 
-и есть код, который выпадает в ошибку
 @app.post("/start")
 async def start(start_date: datetime, end_date: datetime, session: Session = Depends(get_db_session)):
-    data: tuple[dict[str, pd.DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
+    data: tuple[dict[str, DataFrame]] = process_excel_data(disk.paths_processing(start_date, end_date).reset_index(drop=True))
     disk.reset()
-
     try:
         for table in data:
             for table_name, df in table.items():
@@ -59,13 +73,6 @@ async def start(start_date: datetime, end_date: datetime, session: Session = Dep
                 if model is None:
                     raise HTTPException(status_code=400, detail=f"Unknown table: {table_name}")
 
-                await df.to_sql(table_name, con=session.bind, if_exists='append', index=False)
-    except Exception as e:
-        await session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+                ??? что здесь написать чтобы можно было записать датафреймы в соответствующие таблицы базы данных??? 
+
     return {"status": "Data uploaded successfully"}
-
-ошибка заключается в том, что AsyncSession has no attribute "cursor"
-задача заключается в том, чтобы записать data: tuple[dict[str, pd.DataFrame]] в базу данных в соответствующие таблицы под названием "table_name" данные типа DataFrame
-
-перепиши мне мой второй кусок кода, чтобы я мог законнектиться и записать данные 
