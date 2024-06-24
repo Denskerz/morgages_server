@@ -1,1 +1,1 @@
-("'coroutine' object does not support the asynchronous context manager protocol",)
+"detail": "(sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: relation \"zalogiIFT.CommonAttributes\" does not exist\n[SQL: INSERT INTO \"zalogiIFT\".\"CommonAttributes\" 
