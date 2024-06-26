@@ -1,30 +1,38 @@
- INFO - Running command: ['bash', '-c', "sudo sh /ml_data/027_rtl_deposits/docker/run.sh 'python3 /ml_data/027_rtl_deposits/scripts/main.py'"]
-[2024-06-26 15:39:20,275] {subprocess.py:74} INFO - Output:
-[2024-06-26 15:39:20,293] {subprocess.py:78} INFO - running command: sudo podman run -it --user 0 --rm --name  027_rtl_deposits -v /ml_data:/ml_data  027_rtl_deposits python3 /ml_data/027_rtl_deposits/scripts/main.py
-[2024-06-26 15:39:23,912] {subprocess.py:78} INFO - /ml_data/027_rtl_deposits/scripts/main.py:63: DtypeWarning: Columns (4) have mixed types. Specify dtype option on import or set low_memory=False.
-[2024-06-26 15:39:23,912] {subprocess.py:78} INFO -   tera = pd.read_csv(input_filepath, sep=csv_sep, encoding=csv_ensoding, decimal=csv_decimal)
-[2024-06-26 15:39:26,322] {subprocess.py:78} INFO - /usr/local/lib64/python3.8/site-packages/scipy/__init__.py:138: UserWarning: A NumPy version >=1.16.5 and <1.23.0 is required for this version of SciPy (detected version 1.24.4)
-[2024-06-26 15:39:26,323] {subprocess.py:78} INFO -   warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion} is required for this version of "
-[2024-06-26 15:39:26,678] {subprocess.py:78} INFO - /root/.local/lib/python3.8/site-packages/xgboost/core.py:160: UserWarning: [12:39:26] WARNING: /workspace/src/gbm/gbtree.cc:385: Changing updater from `grow_gpu_hist` to `grow_quantile_histmaker`.
-[2024-06-26 15:39:26,678] {subprocess.py:78} INFO -   warnings.warn(smsg, UserWarning)
-[2024-06-26 15:39:26,679] {subprocess.py:78} INFO - /root/.local/lib/python3.8/site-packages/xgboost/core.py:160: UserWarning: [12:39:26] WARNING: /workspace/src/context.cc:44: No visible GPU is found, setting device to CPU.
-[2024-06-26 15:39:26,679] {subprocess.py:78} INFO -   warnings.warn(smsg, UserWarning)
-[2024-06-26 15:39:27,675] {subprocess.py:78} INFO - Traceback (most recent call last):
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/ml_data/027_rtl_deposits/scripts/main.py", line 81, in <module>
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     main_preds = make_prediction(
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/ml_data/027_rtl_deposits/scripts/main.py", line 39, in make_prediction
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     preds = pd.Series(data=mdl.predict_proba(data[x_cols])[:, 1], index=data.index, name=target_col)
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/root/.local/lib/python3.8/site-packages/xgboost/sklearn.py", line 1632, in predict_proba
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     class_probs = super().predict(
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/root/.local/lib/python3.8/site-packages/xgboost/sklearn.py", line 1168, in predict
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     predts = self.get_booster().inplace_predict(
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/root/.local/lib/python3.8/site-packages/xgboost/core.py", line 2416, in inplace_predict
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     data, fns, _ = _transform_pandas_df(data, enable_categorical)
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/root/.local/lib/python3.8/site-packages/xgboost/data.py", line 490, in _transform_pandas_df
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     _invalid_dataframe_dtype(data)
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -   File "/root/.local/lib/python3.8/site-packages/xgboost/data.py", line 308, in _invalid_dataframe_dtype
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO -     raise ValueError(msg)
-[2024-06-26 15:39:27,676] {subprocess.py:78} INFO - ValueError: DataFrame.dtypes for data must be int, float, bool or category. When categorical type is supplied, The experimental DMatrix parameter`enable_categorical` must be set to `True`.  Invalid columns:OPER_268_3_SUM_AMT_MAX: object, share_beztoz_all: object, PFMS_29_AMT_STD: object, PP_CNT_DEPOSIT_STD: object, OPER_4_15_SUM_AMT: object, OST_3014_113_SUMMA_OST: object
-[2024-06-26 15:39:28,489] {subprocess.py:82} INFO - Command exited with return code 1
-[2024-06-26 15:39:28,510] {logging_mixin.py:109} WARNING - /home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/airflow/models/taskinstance.py:629 SAWarning: TypeDecorator UtcDateTime(timezone=True) will not produce a cache key because the ``cache_ok`` attribute is not set to True.  This can have significant performance implications including some performance degradations in comparison to prior SQLAlchemy versions.  Set this attribute to True if this type object's state is safe to use in a cache key, or False to disable this warning. (Background on this error at: https://sqlalche.me/e/14/cprf)
-[2024-06-26 15:39:28,516] {taskinstance.py:1463} ERROR - Task failed with exception
+df = pd.read_sql_query(sql_query, connect)
+[2024-06-26 15:58:40,529] {subprocess.py:78} INFO - Download features 1 ...
+[2024-06-26 15:58:40,529] {subprocess.py:78} INFO - {fn teradata_write_csv(/ml_data/027_rtl_deposits/in/feature.csv)}SELECT * FROM SBX_RTL.D_MLRTL_M0027_FEATURE
+[2024-06-26 15:58:40,529] {subprocess.py:78} INFO - Check dates from table SBX_RTL.D_MLRTL_M0027_CTGY_1
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO - Traceback (most recent call last):
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/ml_data/027_rtl_deposits/scripts/read_teradata.py", line 47, in <module>
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     app.run(main_with_gin_config)
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/absl/app.py", line 312, in run
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     _run_main(main, args)
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/absl/app.py", line 258, in _run_main
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     sys.exit(main(argv))
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/ml_data/027_rtl_deposits/scripts/read_teradata.py", line 42, in main_with_gin_config
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     main()
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/config.py", line 1605, in gin_wrapper
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     utils.augment_exception_message_and_reraise(e, err_str)
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/utils.py", line 41, in augment_exception_message_and_reraise
+[2024-06-26 15:58:40,531] {subprocess.py:78} INFO -     raise proxy.with_traceback(exception.__traceback__) from None
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/config.py", line 1582, in gin_wrapper
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     return fn(*new_args, **new_kwargs)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/ml_data/027_rtl_deposits/scripts/read_teradata.py", line 29, in main
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     check_dates(conn_args, tbl2, rep_dt_column_name, max_date_dif_days)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/config.py", line 1605, in gin_wrapper
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     utils.augment_exception_message_and_reraise(e, err_str)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/utils.py", line 41, in augment_exception_message_and_reraise
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     raise proxy.with_traceback(exception.__traceback__) from None
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/gin/config.py", line 1582, in gin_wrapper
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     return fn(*new_args, **new_kwargs)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/bicc_ml_pipeline/teradata/teradata_utils.py", line 107, in check_dates
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     df = read_query_to_dataframe(conn_args, sql_stmt)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib/python3.8/site-packages/bicc_ml_pipeline/teradata/teradata_utils.py", line 56, in read_query_to_dataframe
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     df = pd.read_sql_query(sql_query, connect)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib64/python3.8/site-packages/pandas/io/sql.py", line 397, in read_sql_query
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     return pandas_sql.read_query(
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib64/python3.8/site-packages/pandas/io/sql.py", line 2078, in read_query
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -     cursor = self.execute(*args)
+[2024-06-26 15:58:40,532] {subprocess.py:78} INFO -   File "/home/airflow/.local/share/virtualenvs/airflow-oRjHgsUP/lib64/python3.8/site-packages/pandas/io/sql.py", line 2030, in execute
+[2024-06-26 15:58:40,533] {subprocess.py:78} INFO -     raise ex from exc
+[2024-06-26 15:58:40,533] {subprocess.py:78} INFO - pandas.errors.DatabaseError: Execution failed on sql 'select max(REPORT_DATE) from SBX_RTL.D_MLRTL_M0027_CTGY_1 ': [Version 17.20.0.31] [Session 54420089] [Teradata Database] [Error 5628] Column REPORT_DATE not found in SBX_RTL.D_MLRTL_M0027_CTGY_1.
