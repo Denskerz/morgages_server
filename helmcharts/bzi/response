@@ -1,5 +1,0 @@
-engine_kwargs = {'connect_args': {'charset': 'utf8'}}
-df.to_sql('my_table', engine, if_exists='replace', index=False, chunksize=1000, **engine_kwargs)
-
-df['russian_column'] = df['russian_column'].str.encode('utf-8')
-df.to_sql('my_table', engine, if_exists='replace', index=False, chunksize=1000)
